@@ -55,3 +55,8 @@ deleteEmployeeById(...)
 
 ### Testing
 Please include proper integration and/or unit tests.
+
+### Scalability Notes
+For improved scalability, consider offloading createEmployee operations to a queue to decouple request handling from downstream processing. This allows the API to respond quickly while background workers process the data asynchronously.
+
+As the system scales further — particularly with multiple API instances — a standalone, shared queue (e.g., RabbitMQ, Kafka) and a centralized cache or datastore (e.g., Redis or a database) will be necessary to ensure consistency, durability, and coordination across services.

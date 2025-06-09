@@ -1,2 +1,16 @@
-spring.application.name: employee-api
-server.port: 8111
+spring:
+  application:
+    name: employee-api
+
+server:
+  port: 8111
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+    org.springframework.boot.web.servlet.filter.ApplicationContextHeaderFilter: DEBUG
+    com.reliaquest.api: DEBUG
+    org.springframework.retry: DEBUG
+    org.springframework.retry.support.RetryTemplate: DEBUG
+    org.springframework.cache: DEBUG
+    org.springframework.cache.interceptor.CacheInterceptor: DEBUG
