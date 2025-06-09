@@ -13,7 +13,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 
 /**
- * Integration Tests that require Mock Server to be running.
+ * Mock Server must be running for these to pass.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class ApiApplicationIntegrationTest {
