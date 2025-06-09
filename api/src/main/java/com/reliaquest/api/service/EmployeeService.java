@@ -47,6 +47,7 @@ public class EmployeeService {
     }
 
     public Employee createEmployee(Employee employee) {
+        // TODO: Handle duplicates
         return serverClient.createEmployee(employee);
     }
 

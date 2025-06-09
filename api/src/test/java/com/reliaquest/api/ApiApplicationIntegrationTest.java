@@ -6,9 +6,6 @@ import com.reliaquest.api.model.Employee;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
-import com.reliaquest.api.model.EmployeeListResponse;
-import com.reliaquest.api.model.EmployeeResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -50,23 +47,20 @@ public class ApiApplicationIntegrationTest {
     @Test
     void getHighestSalaryOfEmployees_shouldMatchMaxSalaryFromEmployeeList() {
         // Step 1: Get all employees
-        var employeeResponse =
-                restTemplate.getForEntity(BASE_URL + "/employees", EmployeeListResponse.class);
+        ResponseEntity<Employee[]> response = restTemplate.getForEntity(BASE_URL, Employee[].class);
 
-        assertThat(employeeResponse.getStatusCode())
-                .withFailMessage(
-                        "Expected HTTP 200 when fetching employees but got %s", employeeResponse.getStatusCode())
+        assertThat(response.getStatusCode())
+                .withFailMessage("Expected HTTP 200 when fetching employees but got %s", response.getStatusCode())
                 .isEqualTo(HttpStatus.OK);
 
-        List<Employee> employees = employeeResponse.getBody().data();
+        List<Employee> employees = Arrays.stream(response.getBody()).toList();
         assertThat(employees)
                 .withFailMessage("Expected non-empty employee list")
                 .isNotNull()
                 .isNotEmpty();
 
         // Step 2: Compute the max salary locally
-        int expectedMaxSalary = employees
-                .stream()
+        int expectedMaxSalary = employees.stream()
                 .mapToInt(Employee::employeeSalary)
                 .max()
                 .orElseThrow(() -> new AssertionError("No salaries found"));
