@@ -38,7 +38,7 @@ public class EmployeeService {
                 .orElse(0);
     }
 
-    public List<String> getTop10HighestEarningEmployeeNames() {
+    public List<String> getTopTenHighestEarningEmployeeNames() {
         return getAllEmployees().stream()
                 .sorted(Comparator.comparingInt(Employee::employeeSalary).reversed())
                 .limit(10)

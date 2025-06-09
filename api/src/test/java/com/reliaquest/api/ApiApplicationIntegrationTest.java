@@ -12,8 +12,11 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 
+/**
+ * Integration Tests that require Mock Server to be running.
+ */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class EmployeeControllerIntegrationTest {
+public class ApiApplicationIntegrationTest {
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -28,7 +31,7 @@ public class EmployeeControllerIntegrationTest {
     }
 
     @Test
-    void getTop10HighestEarningEmployeeNames_shouldReturnList() {
+    void getTopTenHighestEarningEmployeeNames_shouldReturnList() {
         ResponseEntity<List<String>> response = restTemplate.exchange(
                 BASE_URL + "/topTenHighestEarningEmployeeNames",
                 HttpMethod.GET,
@@ -48,11 +51,16 @@ public class EmployeeControllerIntegrationTest {
     }
 
     @Test
-    void searchEmployeesByName_shouldReturnMatches() {
-        String nameFragment = "a";
-        var response = restTemplate.getForEntity(BASE_URL + "/search/" + nameFragment, Employee[].class);
+    void searchEmployeesByName_shouldReturnExactMatches() {
+        Employee alice = new Employee(null, "Alice Wonderland", 90000, 28, "Engineer", "alice@example.com");
+        restTemplate.postForEntity(BASE_URL, alice, Employee.class);
+
+        ResponseEntity<Employee[]> response = restTemplate.getForEntity(BASE_URL + "/search/Alice", Employee[].class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
+
+        Employee[] matches = response.getBody();
+        assertThat(matches).isNotEmpty();
+        assertThat(matches[0].employeeName()).contains("Alice");
     }
 
     @Test
@@ -76,5 +84,23 @@ public class EmployeeControllerIntegrationTest {
 
         assertThat(deleteResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(deleteResponse.getBody()).isEqualTo("Test User");
+    }
+
+    @Test
+    void getEmployeeById_shouldReturnEmployee() {
+        Employee bob = new Employee(null, "Bob Builder", 80000, 35, "Builder", "bob@example.com");
+        ResponseEntity<Employee> created = restTemplate.postForEntity(BASE_URL, bob, Employee.class);
+
+        String id = created.getBody().id();
+        ResponseEntity<Employee> response = restTemplate.getForEntity(BASE_URL + "/" + id, Employee.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().employeeName()).isEqualTo("Bob Builder");
+    }
+
+    @Test
+    void getEmployeeById_withInvalidId_shouldReturnNotFound() {
+        ResponseEntity<String> response = restTemplate.getForEntity(BASE_URL + "/nonexistent-id", String.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 }
