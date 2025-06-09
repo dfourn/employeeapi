@@ -3,8 +3,12 @@ package com.reliaquest.api;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.reliaquest.api.model.Employee;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
+import com.reliaquest.api.model.EmployeeListResponse;
+import com.reliaquest.api.model.EmployeeResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -44,16 +48,49 @@ public class ApiApplicationIntegrationTest {
     }
 
     @Test
-    void getHighestSalaryOfEmployees_shouldReturnInt() {
-        ResponseEntity<Integer> response = restTemplate.getForEntity(BASE_URL + "/highestSalary", Integer.class);
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isGreaterThan(0);
+    void getHighestSalaryOfEmployees_shouldMatchMaxSalaryFromEmployeeList() {
+        // Step 1: Get all employees
+        var employeeResponse =
+                restTemplate.getForEntity(BASE_URL + "/employees", EmployeeListResponse.class);
+
+        assertThat(employeeResponse.getStatusCode())
+                .withFailMessage(
+                        "Expected HTTP 200 when fetching employees but got %s", employeeResponse.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+
+        List<Employee> employees = employeeResponse.getBody().data();
+        assertThat(employees)
+                .withFailMessage("Expected non-empty employee list")
+                .isNotNull()
+                .isNotEmpty();
+
+        // Step 2: Compute the max salary locally
+        int expectedMaxSalary = employees
+                .stream()
+                .mapToInt(Employee::employeeSalary)
+                .max()
+                .orElseThrow(() -> new AssertionError("No salaries found"));
+
+        // Step 3: Call /highestSalary endpoint
+        ResponseEntity<Integer> salaryResponse = restTemplate.getForEntity(BASE_URL + "/highestSalary", Integer.class);
+
+        assertThat(salaryResponse.getStatusCode())
+                .withFailMessage(
+                        "Expected HTTP 200 when fetching highest salary but got %s", salaryResponse.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+
+        Integer actualHighestSalary = salaryResponse.getBody();
+        assertThat(actualHighestSalary)
+                .withFailMessage("Expected highest salary to be %d but got %d", expectedMaxSalary, actualHighestSalary)
+                .isEqualTo(expectedMaxSalary);
     }
 
     @Test
-    void searchEmployeesByName_shouldReturnExactMatches() {
+    void searchEmployeesByName_shouldReturnExactMatches() throws InterruptedException {
         Employee alice = new Employee(null, "Alice Wonderland", 90000, 28, "Engineer", "alice@example.com");
         restTemplate.postForEntity(BASE_URL, alice, Employee.class);
+
+        Thread.sleep(500);
 
         ResponseEntity<Employee[]> response = restTemplate.getForEntity(BASE_URL + "/search/Alice", Employee[].class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);

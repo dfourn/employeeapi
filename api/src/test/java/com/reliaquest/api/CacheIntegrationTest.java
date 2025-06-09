@@ -21,7 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 @SpringBootTest
-@Import(CacheTestConfig.class) // defines cacheManager
+@Import(CacheTestConfig.class)
 @EnableCaching
 class CacheIntegrationTest {
 
